@@ -161,7 +161,7 @@ end
 
 function rpca_admm(A::AbstractMatrix{T};
                           λ              = real(T)(1.0/sqrt(maximum(size(A)))),
-                          ρ              = 2.0,
+                          ρ              = 0.5,
                           iters::Int     = 10000,
                           printerval     = 100,
                           tol            = sqrt(eps(real(T))),
@@ -173,9 +173,7 @@ function rpca_admm(A::AbstractMatrix{T};
                           proxS          = NormL1(λ)) where T
 
   d_norm         = opnorm(A)
-  RT = real(T)
-  μ         = RT(1.25) / d_norm
-  μ̄         = μ  * RT(1.0e+7)
+  RT             = real(T)
   RT             = real(T)
   M, N           = size(A)
   d              = min(M,N)
@@ -184,12 +182,12 @@ function rpca_admm(A::AbstractMatrix{T};
   D              = zeros(T, M, N)
   for k = 0:iters-1
       @. Y = A - S + D
-      prox!(L, proxL, Y, 1/μ)
+      prox!(L, proxL, Y, 1/ρ)
       if nonnegL
           L .= max.(L, 0)
       end
       @. Y = A - L + D
-      prox!(S, proxS, Y, λ/μ)
+      prox!(S, proxS, Y, 1/ρ)
       if nonnegS
           S .= max.(S, 0)
       end
@@ -200,7 +198,6 @@ function rpca_admm(A::AbstractMatrix{T};
           verbose && println("converged")
           break
       end
-      μ = min(μ*ρ, μ̄)
       k == iters && @warn "Maximum number of iterations reached, cost: $cost, tol: $tol"
   end
   return RPCA(L,S,D)

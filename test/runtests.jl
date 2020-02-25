@@ -171,16 +171,13 @@ using Random, Statistics, LinearAlgebra
             0.0490157  0.0        6.5061e-7  0.312169  0.0      ;
             0.443569   0.0        0.714425   0.0       0.192445]
 
-            res = rpca_admm(D, nonnegS=true, nonnegL=true, verbose=false, ρ=10)
+            res = rpca_admm(D, nonnegS=true, nonnegL=true, verbose=true)
 
-            @test norm(res.L-A)/norm(A) < 0.3
-            @test norm(res.S-E)/norm(E) < 0.3
+            @test norm(res.L-A)/norm(A) < 0.2
+            @test norm(res.S-E)/norm(E) < 0.2
             @test norm(D - (res.L + res.S))/norm(D) < 1e-8
 
 
-            res = rpca_admm(D, nonnegS=false, nonnegL=false, verbose=false, iters=50000, ρ=1.1)
-            @test norm(res.L-A)/norm(A) < 0.2
-            @test norm(res.S-E)/norm(E) < 0.3
         end
 
 
@@ -191,9 +188,9 @@ using Random, Statistics, LinearAlgebra
             E = randn(ComplexF64,100,20) .* 10 .* (rand.() .< 0.01)
             A = u*v'
             D = A .+ E
-            res = rpca_admm(D,ρ=50, tol=1e-7)
-            @test sum(abs2, res.S-E)/sum(abs2, E) < 0.3
-            @test sum(abs2, res.L-A)/sum(abs2, A) < 0.3
+            res = rpca_admm(D,ρ=50, tol=1e-5, iters=5000)
+            @test sum(abs2, res.S-E)/sum(abs2, E) < 0.01
+            @test sum(abs2, res.L-A)/sum(abs2, A) < 0.01
         end
     end
 
