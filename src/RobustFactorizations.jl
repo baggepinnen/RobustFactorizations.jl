@@ -3,7 +3,7 @@ module RobustFactorizations
 using Statistics, LinearAlgebra
 using ProximalOperators, TSVD
 
-export rpca, rpca_fista, lowrank, sparserandn
+export rpca, rpca_fista, rpca_admm, lowrank, sparserandn
 
 
 function lowrank(r,c,n)
@@ -162,5 +162,68 @@ function rpca_fista(A::AbstractMatrix{T};
   end
   return RPCA(L,S,D)
 end
+
+
+
+
+
+function rpca_admm(A::AbstractMatrix{T};
+                          λ              = real(T)(1.0/sqrt(maximum(size(A)))),
+                          ρ              = 2.0,
+                          iters::Int     = 10000,
+                          printerval     = 100,
+                          tol            = sqrt(eps(real(T))),
+                          verbose::Bool  = false,
+                          nonnegL::Bool  = false,
+                          nonnegS::Bool  = false,
+                          proxL          = NuclearNorm(real(T)(nonnegL ? 1 : 1/2)),
+                          proxD          = nothing,
+                          proxS          = NormL1(λ)) where T
+
+  d_norm         = opnorm(A)
+  RT = real(T)
+  μ         = RT(1.25) / d_norm
+  μ̄         = μ  * RT(1.0e+7)
+  RT             = real(T)
+  M, N           = size(A)
+  d              = min(M,N)
+  L, S           = zeros(T, M, N), zeros(T, M, N)
+  Y              = zeros(T, M, N)
+  D              = zeros(T, M, N)
+  for k = 0:iters-1
+      @. Y = A - S + D
+      prox!(L, proxL, Y, 1/μ)
+      if nonnegL
+          L .= max.(L, 0)
+      end
+      @. Y = A - L + D
+      prox!(S, proxS, Y, λ/μ)
+      if nonnegS
+          S .= max.(S, 0)
+      end
+      @. D = D + A - L - S
+      cost = opnorm(D) / d_norm
+      verbose && k % printerval == 0 && println("$(k) cost: $(round(cost, sigdigits=4))")
+      if cost <= tol
+          verbose && println("converged")
+          break
+      end
+      μ = min(μ*ρ, μ̄)
+      k == iters && @warn "Maximum number of iterations reached, cost: $cost, tol: $tol"
+  end
+  return RPCA(L,S,D)
+end
+
+
+
+
+
+
+
+
+
+
+
+
 
 end # module

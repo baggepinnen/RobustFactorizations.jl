@@ -146,4 +146,56 @@ using Random, Statistics, LinearAlgebra
     end
 
 
+
+    @testset "Robust PCA ADMM" begin
+        @info "Testing Robust PCA ADMM"
+
+        @testset "Nonneg" begin
+            @info "Testing Nonneg"
+
+            D = [0.462911    0.365901  0.00204357    0.692873    0.935861;
+            0.0446199    0.108606   0.0664309   0.0736707    0.264429;
+            0.320581    0.287788    0.073133    0.188872    0.526404;
+            0.356266    0.197536 0.000718338    0.513795    0.370094;
+            0.677814    0.011651    0.818047   0.0457694    0.471477]
+
+            A = [0.462911   0.365901  0.00204356   0.345428   0.623104;
+            0.0446199  0.108606  0.0429271    0.0736707  0.183814;
+            0.320581   0.203777  0.073133     0.188872   0.472217;
+            0.30725    0.197536  0.000717701  0.201626   0.370094;
+            0.234245   0.011651  0.103622     0.0457694  0.279032]
+
+            E = [0.0        0.0        0.0        0.347445  0.312757 ;
+            0.0        0.0        0.0235038  0.0       0.0806151;
+            0.0        0.0840109  0.0        0.0       0.0541868;
+            0.0490157  0.0        6.5061e-7  0.312169  0.0      ;
+            0.443569   0.0        0.714425   0.0       0.192445]
+
+            res = rpca_admm(D, nonnegS=true, nonnegL=true, verbose=false, ρ=10)
+
+            @test norm(res.L-A)/norm(A) < 0.3
+            @test norm(res.S-E)/norm(E) < 0.3
+            @test norm(D - (res.L + res.S))/norm(D) < 1e-8
+
+
+            res = rpca_admm(D, nonnegS=false, nonnegL=false, verbose=false, iters=50000, ρ=1.1)
+            @test norm(res.L-A)/norm(A) < 0.2
+            @test norm(res.S-E)/norm(E) < 0.3
+        end
+
+
+        @testset "Complex" begin
+            @info "Testing Complex"
+            u = randn(ComplexF64, 100)
+            v = randn(ComplexF64, 20)
+            E = randn(ComplexF64,100,20) .* 10 .* (rand.() .< 0.01)
+            A = u*v'
+            D = A .+ E
+            res = rpca_admm(D,ρ=50, tol=1e-7)
+            @test sum(abs2, res.S-E)/sum(abs2, E) < 0.3
+            @test sum(abs2, res.L-A)/sum(abs2, A) < 0.3
+        end
+    end
+
+
 end
