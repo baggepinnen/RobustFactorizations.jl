@@ -16,14 +16,6 @@ function sparserandn(r,c,γ=0.01)
     randn(r,c) .* (rand(r,c) .< γ)
 end
 
-
-@inline soft_th(x, ϵ) = max(x-ϵ,zero(x)) + min(x+ϵ,zero(x))
-@inline function soft_th(x::Complex, ϵ)
-    m,a = abs(x), angle(x)
-    m = max(m-ϵ,zero(m)) + min(m+ϵ,zero(m))
-    m*cis(a)
-end
-
 struct RPCA{T<:AbstractMatrix}
     L::T
     S::T
