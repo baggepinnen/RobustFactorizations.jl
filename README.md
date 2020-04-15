@@ -1,6 +1,6 @@
 # RobustFactorizations
 
-[![Build Status](https://travis-ci.org/baggepinnen/RobustFactorizations.jl.svg?branch=master)](https://travis-ci.org/baggepinnen/RobustFactorizations.jl)
+[![CI](https://github.com/baggepinnen/RobustFactorizations.jl/workflows/CI/badge.svg)](https://github.com/baggepinnen/RobustFactorizations.jl/actions)
 [![Codecov](https://codecov.io/gh/baggepinnen/RobustFactorizations.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/baggepinnen/RobustFactorizations.jl)
 
 This package provides some utilities for robust factorization of matrices, useful for, e.g., matrix completion and denoising.
