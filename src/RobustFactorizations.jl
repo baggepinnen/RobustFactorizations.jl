@@ -107,52 +107,57 @@ end
 
 function rpca_fista(A::AbstractMatrix{T};
                           λ              = real(T)(1.0/sqrt(maximum(size(A)))),
+                          γ              = 0.5,
                           iters::Int     = 10000,
                           tol            = sqrt(eps(real(T))),
                           verbose::Bool  = false,
+                          printerval     = 50,
                           nonnegL::Bool  = false,
                           nonnegS::Bool  = false,
                           proxL          = NuclearNorm(real(T)(nonnegL ? 1 : 1/2)),
                           proxD          = nothing,
                           proxS          = NormL1(λ)) where T
 
-  RT             = real(T)
-  M, N           = size(A)
-  d              = min(M,N)
-  L, S           = zeros(T, M, N), zeros(T, M, N)
-  YL, YS         = zeros(T, M, N), zeros(T, M, N)
-  L_extr, S_extr = zeros(T, M, N), zeros(T, M, N)
-  D              = zeros(T, M, N)
-  Z              = similar(A)
-  S_prev         = copy(S)
-  L_prev         = copy(L)
-  prox           = SeparableSum(proxS, proxL)
-  γ              = 0.5
-  for k = 1:iters
-      S_extr .= S .+ (k-2)/(k+1).*(S .- S_prev)
-      L_extr .= L .+ (k-2)/(k+1).*(L .- L_prev)
-      @. D = A - S - L
-      @. YS = S_extr + γ*D
-      @. YL = L_extr + γ*D
-      S_prev .= S
-      L_prev .= L
-      prox!((S, L), prox, (YS, YL), γ)
-      if nonnegS
-          S .= max.(S, 0)
-      end
-      if nonnegL
-          L .= max.(L, 0)
-      end
-      ϵ = max(norm(S_extr-S, Inf), norm(L_extr-L, Inf))/γ
-      cost = ϵ/(1+max(norm(S,Inf), norm(L,Inf)))
-      verbose && println("$(k) cost: $(round(cost, sigdigits=4))")
-      if cost <= tol
-          verbose && println("converged")
-          break
-      end
-      k == iters && @warn "Maximum number of iterations reached, cost: $cost, tol: $tol"
-  end
-  return RPCA(L,S,D)
+    RT             = real(T)
+    M, N           = size(A)
+    d              = min(M,N)
+    L, S           = zeros(T, M, N), zeros(T, M, N)
+    YL, YS         = zeros(T, M, N), zeros(T, M, N)
+    L_extr, S_extr = zeros(T, M, N), zeros(T, M, N)
+    D              = zeros(T, M, N)
+    Z              = similar(A)
+    S_prev         = copy(S)
+    L_prev         = copy(L)
+    prox           = SeparableSum(proxS, proxL)
+    t              = RT(1.0)
+    for k = 1:iters
+        t1 = (1 + sqrt(1+4t^2))/2
+        acc = (t-1)/t1
+        t = t1
+        S_extr .= S .+ acc.*(S .- S_prev)
+        L_extr .= L .+ acc.*(L .- L_prev)
+        @. D = A - S - L
+        @. YS = S_extr + γ*D
+        @. YL = L_extr + γ*D
+        S_prev .= S
+        L_prev .= L
+        prox!((S, L), prox, (YS, YL), γ)
+        if nonnegS
+            S .= max.(S, 0)
+        end
+        if nonnegL
+            L .= max.(L, 0)
+        end
+        ϵ = max(norm(S_extr-S, Inf), norm(L_extr-L, Inf))/γ
+        cost = ϵ/(1+max(norm(S,Inf), norm(L,Inf)))
+        verbose && k % printerval == 0 &&  println("$(k) cost: $(round(cost, sigdigits=4))")
+        if cost <= tol
+            verbose && println("converged, cost: $(round(cost, sigdigits=4))")
+            break
+        end
+        k == iters && @warn "Maximum number of iterations reached, cost: $cost, tol: $tol"
+    end
+    return RPCA(L,S,D)
 end
 
 
