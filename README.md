@@ -40,7 +40,7 @@ The `rpca` function is the recommended default choice:
 rpca(Ln::Matrix; λ=1.0 / √(maximum(size(A))), iters=1000, tol=1.0e-7, ρ=1.5, verbose=false, nonnegL=false, nonnegS=false, nukeA=true)
 ```
 It solves the following problem:
-$\operatorname{minimize}_{L,D,S} ||L||_* + \lambda ||S||_1 + \gamma ||D||^2_2 \quad \text{s.t. } L_n = L+D+S$
+$\text{minimize}_{L,D,S} ||L||_* + \lambda ||S||_1 + \gamma ||D||^2_2 \quad \text{s.t. } L_n = L+D+S$
 
 Reference:
 > "The Augmented Lagrange Multiplier Method for Exact Recovery of Corrupted Low-Rank Matrices", Zhouchen Lin, Minming Chen, Leqin Wu, Yi Ma, https://people.eecs.berkeley.edu/~yima/psfile/Lin09-MP.pdf
