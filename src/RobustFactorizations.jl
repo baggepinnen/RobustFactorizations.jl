@@ -31,7 +31,7 @@ minimize_{L,D,S} ||L||_* + λ||S||₁ + γ||D||₂² s.t. A = L+D+S
 
 Ref: "The Augmented Lagrange Multiplier Method for Exact Recovery of Corrupted Low-Rank Matrices", Zhouchen Lin, Minming Chen, Leqin Wu, Yi Ma, https://people.eecs.berkeley.edu/~yima/psfile/Lin09-MP.pdf
 
-#Arguments:
+# Arguments:
 - `A`: Input matrix
 - `λ`: Sparsity regularization
 - `iters`: Maximum number of iterations
